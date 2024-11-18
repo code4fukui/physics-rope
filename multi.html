@@ -1,9 +1,9 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
-<title>Verlet Physics Rope</title>
+<title>Verlet Physics Rope muti</title>
 </head><body>
 <div id="container">
   <canvas id="canvas" width="800" height="480"></canvas>
-  <p>Verlet Physics Rope (move the mouse!) <a href=https://github.com/physics-rope/>src on GitHub</a> forked <a href=https://codepen.io/guerrillacontra/pen/XPZeww>Physics Rope</a></p>
+  <p>Verlet Physics Rope multi (move the mouse!) <a href=https://github.com/physics-rope/>src on GitHub</a> forked <a href=https://codepen.io/guerrillacontra/pen/XPZeww>Physics Rope</a></p>
 </div>
 
 <style>
@@ -44,31 +44,51 @@ gradient.addColorStop("0.5", "blue");
 gradient.addColorStop("0.75", "red");
 gradient.addColorStop("1.0", "white");
 
-const args = {
-  start: { x: 100, y: canvas.height / 2 },
-  end: { x: canvas.width - 100, y: canvas.height / 2 },
-  resolution: 8,
-  mass: 0.88,
-  damping: 0.95,
-  gravity: { x: 0, y: 3000 },
-  //gravity: { x: 0, y: 0 },
-  solverIterations: 500,
-  ropeColour: gradient,
-  ropeSize: 4,
-};
+const argss = [
+  {
+    start: { x: 100, y: canvas.height / 2 },
+    end: { x: canvas.width - 100, y: canvas.height / 2 },
+    resolution: 8,
+    mass: 0.88,
+    damping: 0.95,
+    gravity: { x: 0, y: 3000 },
+    //gravity: { x: 0, y: 0 },
+    solverIterations: 500,
+    ropeColour: gradient,
+    ropeSize: 4,
+  },
+  {
+    start: { x: canvas.width - 100, y: canvas.height / 2 },
+    end: { x: 100, y: canvas.height / 2 },
+    resolution: 8,
+    mass: 0.88,
+    damping: 0.3,
+    gravity: { x: 0, y: 3000 },
+    //gravity: { x: 0, y: 0 },
+    solverIterations: 500,
+    ropeColour: gradient,
+    ropeSize: 4,
+  },
+];
 
-const points = Rope.generate(
-  args.start,
-  args.end,
-  args.resolution,
-  args.mass,
-  args.damping
-);
+const ropes = [];
+for (const args of argss) {
+  const points = Rope.generate(
+    args.start,
+    args.end,
+    args.resolution,
+    args.mass,
+    args.damping
+  );
 
-const rope = new Rope(points, args.solverIterations);
+  const rope = new Rope(points, args.solverIterations);
+  ropes.push(rope);
+  rope.args = args;
+}
+
 
 const tick = dt => {
-  rope.update(args.gravity, dt);
+  ropes.forEach(rope => rope.update(rope.args.gravity, dt));
 };
 
 const drawRopePoints = (context, points, colour, width) => {
@@ -87,13 +107,15 @@ const drawRopePoints = (context, points, colour, width) => {
 
 //render a rope using the verlet points
 const draw = (canvas, context, dt) => {
-  drawRopePoints(context, points, args.ropeColour, args.ropeSize);
+  ropes.forEach(rope => drawRopePoints(context, rope._points, rope.args.ropeColour, rope.args.ropeSize));
 };
 
 const onMouseMove = (x, y) => {
-  const point = rope.getPoint(0);
-  point.pos.x = x;
-  point.pos.y = y;
+  for (const rope of ropes) {
+    const point = rope.getPoint(0);
+    point.pos.x = x;
+    point.pos.y = y;
+  }
 };
 
 const app = new App(window, canvas, context, tick, draw, 60);
